@@ -37,13 +37,15 @@ def registrar_actividades():
         st.error("No se encontró el equipo seleccionado.")
         return
 
-    # Selección de actividad específica del proyecto
+    # Selección de actividad específica del proyecto (nombre + descripción)
     actividades = db.query(Actividades).filter_by(id_proyecto=proyecto.id_proyecto).all()
     if not actividades:
         st.error("No hay actividades registradas para este proyecto.")
         return
 
-    actividad_seleccionada = st.selectbox("Seleccionar Actividad", [a.nombre_actividad for a in actividades])
+    # Concatenar nombre y descripción para mostrar al usuario
+    actividades_opciones = {f"{a.nombre_actividad} - {a.descripción}": a for a in actividades}
+    actividad_seleccionada = st.selectbox("Seleccionar Actividad", list(actividades_opciones.keys()))
 
     # Datos adicionales
     horas_trabajadas = st.number_input("Horas Trabajadas", min_value=0.0)
@@ -55,7 +57,7 @@ def registrar_actividades():
     # Botón para registrar actividad
     if st.button("Registrar Actividad"):
         id_usuario = st.session_state["user_id"]
-        actividad = next((a for a in actividades if a.nombre_actividad == actividad_seleccionada), None)
+        actividad = actividades_opciones[actividad_seleccionada]
         operador = db.query(Operadores).filter_by(name_operador=operador_seleccionado).first()
 
         nuevo_registro = RegistroDiario(
@@ -78,3 +80,4 @@ def registrar_actividades():
         st.success("Actividad registrada exitosamente")
 
     db.close()
+
